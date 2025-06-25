@@ -1,0 +1,43 @@
+using GTA;
+using GTA.UI;
+using System;
+using System.Windows.Forms;
+
+namespace RemovedCrosshair
+{
+    public class Crosshair : Script
+    {
+        public bool active = false;
+        public static Crosshair Instance { get; private set; }
+
+        public Crosshair()
+        {
+            Instance = this;
+
+            Tick += OnTick;
+            KeyDown += OnKeyDown;
+        }
+
+        private void OnTick(object sender, EventArgs e)
+        {
+            if (active && Game.Player.IsAiming)
+                Hud.ShowComponentThisFrame(HudComponent.Reticle);
+            else
+                Hud.HideComponentThisFrame(HudComponent.Reticle);
+        }
+
+        private void OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.E)
+            {
+                Toggle();
+            }
+        }
+
+
+        public void Toggle()
+        {
+            active = !active;
+        }
+    }
+}
