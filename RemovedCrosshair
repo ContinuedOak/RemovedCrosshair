@@ -1,18 +1,25 @@
 using GTA;
 using GTA.UI;
 using System;
+using System.IO;
 using System.Windows.Forms;
+using System.Drawing;
 
 namespace RemovedCrosshair
 {
     public class Crosshair : Script
     {
-        public bool active = false;
         public static Crosshair Instance { get; private set; }
+
+        private bool active = false;
+        private Keys toggleKey = Keys.E;
+        private string configPath = "scripts\\RemovedCrosshair.ini";
 
         public Crosshair()
         {
             Instance = this;
+
+            LoadSettings();
 
             Tick += OnTick;
             KeyDown += OnKeyDown;
@@ -28,16 +35,59 @@ namespace RemovedCrosshair
 
         private void OnKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.E)
+            if (e.KeyCode == toggleKey)
             {
                 Toggle();
             }
         }
 
-
         public void Toggle()
         {
             active = !active;
+            SaveSettings();
+        }
+
+        private void LoadSettings()
+        {
+            if (!File.Exists(configPath))
+            {
+                SaveSettings(); // Create with default if it doesn't exist
+                return;
+            }
+
+            var lines = File.ReadAllLines(configPath);
+
+            foreach (var line in lines)
+            {
+                if (line.StartsWith("Active", StringComparison.OrdinalIgnoreCase))
+                {
+                    string[] parts = line.Split('=');
+                    if (parts.Length == 2 && bool.TryParse(parts[1], out bool result))
+                    {
+                        active = result;
+                    }
+                }
+                else if (line.StartsWith("ToggleKey", StringComparison.OrdinalIgnoreCase))
+                {
+                    string[] parts = line.Split('=');
+                    if (parts.Length == 2 && Enum.TryParse(parts[1], out Keys key))
+                    {
+                        toggleKey = key;
+                    }
+                }
+            }
+        }
+
+        private void SaveSettings()
+        {
+            var lines = new string[]
+            {
+                $"Active={active}",
+                $"ToggleKey={toggleKey}"
+            };
+
+            Directory.CreateDirectory(Path.GetDirectoryName(configPath)); // Ensure 'scripts/' exists
+            File.WriteAllLines(configPath, lines);
         }
     }
 }
